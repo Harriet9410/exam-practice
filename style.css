@@ -154,3 +154,9 @@ kbd{background:var(--bg);border:1px solid var(--border);border-radius:4px;paddin
 .empty-state p{font-size:14px;margin-bottom:8px;line-height:1.6;}
 
 @media(max-width:768px){.sidebar{display:none;}.content{padding:16px;}.q-card{padding:20px;}}
+
+.toast{position:fixed;top:60px;right:24px;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;opacity:0;transform:translateX(100px);transition:all 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+.toast-show{opacity:1;transform:translateX(0);}
+.toast-success{background:var(--green);color:#fff;}
+.toast-error{background:var(--red);color:#fff;}
+.toast-info{background:var(--accent);color:#fff;}

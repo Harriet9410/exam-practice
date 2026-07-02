@@ -956,11 +956,14 @@
         buildCategoryFilter();
         buildIndex();
         render();
+        showToast('☁️ 已从云端同步 ' + data.length + ' 道题', 'success');
         if (callback) callback(true, data.length);
       } else {
+        showToast('☁️ 云端无题目', 'info');
         if (callback) callback(false, 0);
       }
     }).catch(function(e) {
+      showToast('⚠️ 云端同步失败', 'error');
       if (callback) callback(false, 0);
     });
   }
@@ -975,10 +978,21 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     }).then(function(r) { return r.json(); }).then(function() {
+      showToast('☁️ 已同步到云端', 'success');
       if (callback) callback(true);
     }).catch(function(e) {
+      showToast('⚠️ 云端同步失败', 'error');
       if (callback) callback(false);
     });
+  }
+
+  function showToast(msg, type) {
+    var t = document.createElement('div');
+    t.className = 'toast toast-' + (type || 'info');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function() { t.classList.add('toast-show'); }, 10);
+    setTimeout(function() { t.classList.remove('toast-show'); setTimeout(function() { t.remove(); }, 300); }, 2500);
   }
 
   function loadQuestionsFromStorage() {
