@@ -13,6 +13,7 @@
   };
 
   var typeNames = { single:'单选题', multiple:'多选题', fill:'填空题', judge:'判断题', qa:'问答题' };
+  var CLOUD_URL = 'https://api.npoint.io/f67c6c96f89250f02822';
 
   function loadProgress() {
     try { var s = localStorage.getItem('exam-progress'); if (s) return JSON.parse(s); } catch(e) {}
@@ -355,6 +356,7 @@
     document.getElementById('fileStatus').className = 'file-status hidden';
     document.getElementById('fileInput').value = '';
     document.getElementById('pasteArea').value = '';
+    uploadToCloud();
     alert('成功导入 ' + valid.length + ' 道题目！');
   }
 
@@ -687,7 +689,9 @@
         state.revealed = false; state.selected = null; state.fillValue = '';
         if (state.current >= state.indices.length - 1 && state.current > 0) state.current--;
         saveQuestionsToStorage();
-        buildCategoryFilter(); buildIndex(); render();
+    buildCategoryFilter(); buildIndex(); render();
+    syncFromCloud();
+        uploadToCloud();
       }
     };
   }
@@ -752,6 +756,7 @@
       buildCategoryFilter();
       buildIndex();
       render();
+      uploadToCloud();
     };
     document.getElementById('cancelCatBtn').onclick = function() {
       div.remove();
@@ -841,6 +846,7 @@
       saveQuestionsToStorage();
       buildIndex();
       render();
+      uploadToCloud();
       alert('已修改 ' + count + ' 道题的科目为「' + newSubj + '」');
     };
     document.getElementById('cancelSubjBtn').onclick = function() {
@@ -925,6 +931,7 @@
       state.revealed = false;
       saveQuestionsToStorage();
       renderQuiz();
+      uploadToCloud();
     };
     document.getElementById('cancelAnswerBtn').onclick = function() {
       div.remove();
@@ -939,6 +946,39 @@
       });
       localStorage.setItem('exam-questions', JSON.stringify(data));
     } catch(e) {}
+  }
+
+  function syncFromCloud(callback) {
+    fetch(CLOUD_URL).then(function(r) { return r.json(); }).then(function(data) {
+      if (data && data.length) {
+        state.questions = data;
+        saveQuestionsToStorage();
+        buildCategoryFilter();
+        buildIndex();
+        render();
+        if (callback) callback(true, data.length);
+      } else {
+        if (callback) callback(false, 0);
+      }
+    }).catch(function(e) {
+      if (callback) callback(false, 0);
+    });
+  }
+
+  function uploadToCloud(callback) {
+    var data = state.questions.map(function(q) {
+      var c = {}; for (var k in q) if (k.charAt(0) !== '_') c[k] = q[k];
+      return c;
+    });
+    fetch(CLOUD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function(r) { return r.json(); }).then(function() {
+      if (callback) callback(true);
+    }).catch(function(e) {
+      if (callback) callback(false);
+    });
   }
 
   function loadQuestionsFromStorage() {
@@ -1025,6 +1065,13 @@
       var data = state.questions.map(function(q) { var c = {}; for (var k in q) if (k.charAt(0)!=='_') c[k]=q[k]; return c; });
       var blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
       var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'questions.json'; a.click();
+    };
+    document.getElementById('syncBtn').onclick = function() {
+      if (confirm('从云端拉取最新题目？（本地未上传的修改会被覆盖）')) {
+        syncFromCloud(function(ok, count) {
+          alert(ok ? '同步成功，共 ' + count + ' 道题' : '同步失败，请检查网络');
+        });
+      }
     };
     document.getElementById('resetProgressBtn').onclick = function() {
       if (confirm('确定重置所有学习进度？')) { state.progress = {known:{},wrong:{},starred:{}}; saveProgress(); render(); }
