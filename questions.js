@@ -163,5 +163,49 @@ var QUESTIONS = [
     "options": [],
     "answer": "为按钮等组件绑定监视器：button.addActionListener(listener);，监听器实现 ActionListener 接口，重写 actionPerformed(ActionEvent e) 方法",
     "explanation": ""
+  },
+  {
+    "id": "imp_1782991704422_0",
+    "type": "qa",
+    "subject": "Java",
+    "category": "编程题",
+    "difficulty": 1,
+    "question": "求平均值",
+    "options": [],
+    "answer": "(1)import java.util.Scanner; public class Exam{ public static void main(String argv[]){ Scanner sr=new Scanner(System.in); int i,s=0,a; for (i=1;i<=10;i++){ a=sr.nextInt(); s=s+a; } System.out.printf(\"%.2f\\n\",s/10.0); } } (2)import java.util.Scanner; public class Exam{ public static void main(String argv[]){ Scanner sr=new Scanner(System.in); double s=0,a; int gs=0; while(sr.hasNextDouble()){ a=sr.nextDouble(); s=s+a; gs++; } System.out.printf(\"%d个数的平均值为%.2f\\n\",gs,s/gs); } }",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782991704423_1",
+    "type": "qa",
+    "subject": "Java",
+    "category": "编程题",
+    "difficulty": 1,
+    "question": "类的定义和使用",
+    "options": [],
+    "answer": "class DCSL{ int a,d,n; DCSL(int a,int d,int n){ this.a=a; this.d=d; this.n=n; } int getHe(){ return(2*a+(n-1)*d)/2*n; } } public class Exam { public static void main(String[] args) { DCSL sl=new DCSL(3,2,4); System.out.println(sl.getHe()); } }",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782991704423_2",
+    "type": "qa",
+    "subject": "Java",
+    "category": "编程题",
+    "difficulty": 1,
+    "question": "类的继承（super）",
+    "options": [],
+    "answer": "class TX{ int a,b,c; TX(int a,int b,int c){ this.a=a; this.b=b; this.c=c; } double getArea(){ return (a+b)*c/2.0; } } class TXZ extends TX{ int h; TXZ(int a,int b,int c,int h){ super(a,b,c); this.h=h; } double getV(){ return getArea()*h; } } public class Exam { public static void main(String[] args) { TXZ z=new TXZ(1,2,3,4); System.out.printf (\"%.2f\\n\",z.getV()); } }",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782991704423_3",
+    "type": "qa",
+    "subject": "Java",
+    "category": "编程题",
+    "difficulty": 1,
+    "question": "继承多态，抽象类",
+    "options": [],
+    "answer": "（继承）interface XS{ int getXS(); } class NX implements XS{ public int getXS(){ return 100000; } } class YX implements XS{ public int getXS(){ return 8000*12; } } class ZX implements XS{ public int getXS(){ return 1500*52; } } public class Exam { public static void main(String[] args) { XS s[]={new NX(),new YX(),new ZX()}; for(int i=0;i<=2;i++) System.out.println(s[i].getXS()); } } （抽象）abstract class XS{ abstract int getXS(); } class NX extends XS{ public int getXS(){ return 100000; } } class YX extends XS{ public int getXS(){ return 8000*12; } } class ZX extends XS{ public int getXS(){ return 1500*52; } } public class Exam { public static void main(String[] args) { XS s[]={new NX(),new YX(),new ZX()}; for(int i=0;i<=2;i++) System.out.println(s[i].getXS()); } }",
+    "explanation": ""
   }
 ];
