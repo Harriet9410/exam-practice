@@ -1,7 +1,7 @@
 var QUESTIONS = [
   {
     "id": "u1_1",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第1题",
@@ -16,7 +16,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_2",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第2题",
@@ -31,7 +31,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_3",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第3题",
@@ -46,7 +46,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_4",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第4题",
@@ -61,7 +61,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_5",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第5题",
@@ -76,7 +76,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_6",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第6题",
@@ -91,7 +91,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_7",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第7题",
@@ -106,7 +106,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_8",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第8题",
@@ -121,7 +121,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_9",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第9题",
@@ -136,7 +136,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_10",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第10题",
@@ -151,7 +151,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_11",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第11题",
@@ -166,7 +166,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_12",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第12题",
@@ -181,7 +181,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_13",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第13题",
@@ -196,7 +196,7 @@ var QUESTIONS = [
   },
   {
     "id": "u1_14",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 1",
     "difficulty": 1,
     "question": "Unit 1 - 第14题",
@@ -211,7 +211,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_1",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第1题",
@@ -226,7 +226,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_2",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第2题",
@@ -241,7 +241,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_3",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第3题",
@@ -256,7 +256,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_4",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第4题",
@@ -271,7 +271,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_5",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第5题",
@@ -286,7 +286,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_6",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第6题",
@@ -301,7 +301,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_7",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第7题",
@@ -316,7 +316,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_8",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第8题",
@@ -331,7 +331,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_9",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第9题",
@@ -346,7 +346,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_10",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第10题",
@@ -361,7 +361,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_11",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第11题",
@@ -376,7 +376,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_12",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第12题",
@@ -391,7 +391,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_13",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第13题",
@@ -406,7 +406,7 @@ var QUESTIONS = [
   },
   {
     "id": "u2_14",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 2",
     "difficulty": 1,
     "question": "Unit 2 - 第14题",
@@ -421,7 +421,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_1",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第1题",
@@ -436,7 +436,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_2",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第2题",
@@ -451,7 +451,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_3",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第3题",
@@ -466,7 +466,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_4",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第4题",
@@ -481,7 +481,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_5",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第5题",
@@ -496,7 +496,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_6",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第6题",
@@ -511,7 +511,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_7",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第7题",
@@ -526,7 +526,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_8",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第8题",
@@ -541,7 +541,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_9",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第9题",
@@ -556,7 +556,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_10",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第10题",
@@ -571,7 +571,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_11",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第11题",
@@ -586,7 +586,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_12",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第12题",
@@ -601,7 +601,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_13",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第13题",
@@ -616,7 +616,7 @@ var QUESTIONS = [
   },
   {
     "id": "u3_14",
-    "type": "single",
+    "subject": "大学英语2",
     "category": "Unit 3",
     "difficulty": 1,
     "question": "Unit 3 - 第14题",
@@ -627,6 +627,171 @@ var QUESTIONS = [
       "In April."
     ],
     "answer": 3,
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624735_0",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "源文件扩展名为?编译生成字节码文件扩展名为?",
+    "options": [],
+    "answer": "源文件扩展名为 .java；编译生成字节码文件扩展名为 .class",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624735_1",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "行注释、块注释、文档注释分别怎么标注?",
+    "options": [],
+    "answer": "行注释：//；块注释：/* ... */；文档注释：/** ... */",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624735_2",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "编译源代码命令、运行字节码、显示JDK版本号、反编译字节码、生成文档注释的命令及格式",
+    "options": [],
+    "answer": "编译源代码：javac 源文件名.java 运行字节码：java 类名 显示JDK版本号：java -version 反编译字节码：javap 类名 生成文档注释：javadoc 源文件名.java",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624735_3",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "布尔型变量定义定义及取值",
+    "options": [],
+    "answer": "布尔型变量定义：boolean flag = true; 或 boolean flag = false;，取值只能是 true 或 false",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624735_4",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "面向对象三个特性",
+    "options": [],
+    "answer": "面向对象三个特性：封装、继承、多态",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624735_5",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "static class implements interface this super import package abstract final关键字用途",
+    "options": [],
+    "answer": "static：静态成员，属于类而非实例 class：定义类 implements：实现接口 interface：定义接口 this：当前对象引用 super：父类引用 import：导入包/类 package：声明包 abstract：抽象类/抽象方法 final：类不可继承、方法不可重写、变量为常量",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624736_6",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "类成员访问权限控制关键字",
+    "options": [],
+    "answer": "类成员访问权限控制关键字：private（本类）、default/缺省（同包）、protected（同包+子类）、public（任意）",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624736_7",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "多层继承构造函数执行过程",
+    "options": [],
+    "answer": "多层继承构造函数执行过程：从最顶层父类开始逐层向下执行，先执行 Object 构造，再执行中间父类构造，最后执行子类构造，子类构造默认首行调用 super()",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624736_8",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "兰波达表达式定义排序规则使用，如Arrays.sort(a,(01,02)->02-01),前面减后面为升序，后面减前面为降序",
+    "options": [],
+    "answer": "Lambda表达式排序：Arrays.sort(a, (o1, o2) -> o1 - o2) 前减后为升序；Arrays.sort(a, (o1, o2) -> o2 - o1) 后减前为降序",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624736_9",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "异常处理关键字",
+    "options": [],
+    "answer": "异常处理关键字：try、catch、finally、throw、throws",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624736_10",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "多线程主要方法及功能如sleep run start interrupt wait notify notifyAll等",
+    "options": [],
+    "answer": "多线程主要方法： sleep() 休眠指定毫秒 run() 线程执行体 start() 启动线程 interrupt() 中断线程 wait() 释放锁等待 notify() 唤醒一个等待线程 notifyAll() 唤醒所有等待线程",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624736_11",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "泛型容器类、拿来就用线程的使用格式统一的方法，支持泛型，TreeSet HashSet TreeMap HashMap LinkedList ArrayList BigInteger",
+    "options": [],
+    "answer": "泛型容器类： ArrayList 动态数组 LinkedList 双向链表 HashSet 无序不重复 TreeSet 有序不重复 HashMap 键值对无序 TreeMap 键值对有序 BigInteger 大整数 统一使用泛型格式如 ArrayList<String> list = new ArrayList<>()",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624736_12",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "文件字节流、字符流、缓冲流、数组流、字符串流",
+    "options": [],
+    "answer": "文件字节流：FileInputStream/FileOutputStream 字符流：FileReader/FileWriter 缓冲流：BufferedReader/BufferedWriter、BufferedInputStream/BufferedOutputStream 数组流：ByteArrayInputStream/ByteArrayOutputStream 字符串流：StringReader/StringWriter",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624736_13",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "文件序列化，把一个对象完全转成字节序列，不用考虑对象成员个数及类型，以整个对象、数组、LinkedList为单位读写文件",
+    "options": [],
+    "answer": "文件序列化：类实现 Serializable 接口，用 ObjectOutputStream 的 writeObject() 写入，ObjectInputStream 的 readObject() 读取，可整体读写对象、数组、LinkedList",
+    "explanation": ""
+  },
+  {
+    "id": "imp_1782990624736_14",
+    "type": "qa",
+    "subject": "Java",
+    "category": "",
+    "difficulty": 1,
+    "question": "为按钮等组件事件源，绑定监视器监听的方法addActionListener",
+    "options": [],
+    "answer": "为按钮等组件绑定监视器：button.addActionListener(listener);，监听器实现 ActionListener 接口，重写 actionPerformed(ActionEvent e) 方法",
     "explanation": ""
   }
 ];

@@ -419,14 +419,16 @@
       return;
     }
 
-    // Group by category
-    var groups = {};
-    var groupOrder = [];
+    // Group by subject > category
+    var subjectGroups = {};
+    var subjectOrder = [];
     for (var i = 0; i < state.indices.length; i++) {
       var q = state.questions[state.indices[i]];
+      var subj = q.subject || '未分科目';
       var cat = q.category || '未分类';
-      if (!groups[cat]) { groups[cat] = []; groupOrder.push(cat); }
-      groups[cat].push({ idx: i, q: q });
+      if (!subjectGroups[subj]) { subjectGroups[subj] = {}; subjectOrder.push(subj); }
+      if (!subjectGroups[subj][cat]) subjectGroups[subj][cat] = [];
+      subjectGroups[subj][cat].push({ idx: i, q: q });
     }
 
     // Load collapsed state
@@ -434,53 +436,92 @@
     try { var cs = localStorage.getItem('exam-collapsed'); if (cs) collapsed = JSON.parse(cs); } catch(e) {}
 
     var globalIdx = 0;
-    for (var g = 0; g < groupOrder.length; g++) {
-      var cat = groupOrder[g];
-      var items = groups[cat];
-      var isCollapsed = !!collapsed[cat];
+    for (var s = 0; s < subjectOrder.length; s++) {
+      var subj = subjectOrder[s];
+      var catGroups = subjectGroups[subj];
+      var catKeys = Object.keys(catGroups);
 
-      // Category header
-      var header = document.createElement('div');
-      header.className = 'cat-group-header' + (isCollapsed ? ' cat-collapsed' : '');
-      header.setAttribute('data-cat', cat);
-      header.innerHTML = '<span>' + escapeHtml(cat) + ' <span class="cat-count">(' + items.length + '题)</span></span><span class="cat-arrow">' + (isCollapsed ? '▶' : '▼') + '</span>';
-      header.onclick = function() {
-        var c = this.getAttribute('data-cat');
-        this.classList.toggle('cat-collapsed');
+      // Subject header
+      var subjHeader = document.createElement('div');
+      var isSubjCollapsed = !!collapsed['subj_' + subj];
+      subjHeader.className = 'subj-group-header' + (isSubjCollapsed ? ' subj-collapsed' : '');
+      subjHeader.setAttribute('data-subj', subj);
+      var subjTotal = 0;
+      for (var ci = 0; ci < catKeys.length; ci++) subjTotal += catGroups[catKeys[ci]].length;
+      subjHeader.innerHTML = '<span>' + escapeHtml(subj) + ' <span class="cat-count">(' + subjTotal + '题)</span></span><span class="cat-arrow">' + (isSubjCollapsed ? '▶' : '▼') + '</span>';
+      subjHeader.onclick = function() {
+        var sj = this.getAttribute('data-subj');
+        this.classList.toggle('subj-collapsed');
         var arrow = this.querySelector('.cat-arrow');
-        arrow.textContent = this.classList.contains('cat-collapsed') ? '▶' : '▼';
+        arrow.textContent = this.classList.contains('subj-collapsed') ? '▶' : '▼';
         var sibling = this.nextElementSibling;
-        while (sibling && sibling.classList.contains('cat-item') && !sibling.classList.contains('cat-group-header')) {
-          sibling.style.display = this.classList.contains('cat-collapsed') ? 'none' : '';
+        while (sibling && !sibling.classList.contains('subj-group-header')) {
+          sibling.style.display = this.classList.contains('subj-collapsed') ? 'none' : '';
           sibling = sibling.nextElementSibling;
         }
         try {
           var col = {};
-          var allHeaders = document.querySelectorAll('.cat-group-header.cat-collapsed');
-          for (var i = 0; i < allHeaders.length; i++) col[allHeaders[i].getAttribute('data-cat')] = true;
+          var allSubj = document.querySelectorAll('.subj-group-header.subj-collapsed');
+          for (var i = 0; i < allSubj.length; i++) col['subj_' + allSubj[i].getAttribute('data-subj')] = true;
+          var allCat = document.querySelectorAll('.cat-group-header.cat-collapsed');
+          for (var i = 0; i < allCat.length; i++) col[allCat[i].getAttribute('data-cat')] = true;
           localStorage.setItem('exam-collapsed', JSON.stringify(col));
         } catch(e) {}
       };
-      ul.appendChild(header);
+      ul.appendChild(subjHeader);
 
-      // Items
-      for (var j = 0; j < items.length; j++) {
-        var item = items[j];
-        var li = document.createElement('div');
-        li.className = 'cat-item q-item';
-        if (isCollapsed) li.style.display = 'none';
-        if (item.idx === state.current) li.className += ' active';
-        if (state.progress.known[item.q.id]) li.className += ' known';
-        if (state.progress.wrong[item.q.id]) li.className += ' wrong';
-        li.innerHTML = '<span class="idx">' + (item.idx+1) + '</span><span class="q-text' + (!hasAnswer(item.q) ? ' q-text-no-answer' : '') + '">' + (!hasAnswer(item.q) ? '⚠ ' : '') + '第' + (item.idx+1) + '题</span>';
-        li.setAttribute('data-idx', item.idx);
-        li.onclick = function() {
-          state.current = parseInt(this.getAttribute('data-idx'));
-          state.revealed = false; state.selected = null; state.fillValue = '';
-          render();
+      for (var g = 0; g < catKeys.length; g++) {
+        var cat = catKeys[g];
+        var items = catGroups[cat];
+        var isCollapsed = !!collapsed[cat];
+        if (isSubjCollapsed) isCollapsed = true;
+
+        // Category header
+        var header = document.createElement('div');
+        header.className = 'cat-group-header' + (isCollapsed ? ' cat-collapsed' : '');
+        if (isSubjCollapsed) header.style.display = 'none';
+        header.setAttribute('data-cat', cat);
+        header.innerHTML = '<span>' + escapeHtml(cat) + ' <span class="cat-count">(' + items.length + '题)</span></span><span class="cat-arrow">' + (isCollapsed ? '▶' : '▼') + '</span>';
+        header.onclick = function() {
+          var c = this.getAttribute('data-cat');
+          this.classList.toggle('cat-collapsed');
+          var arrow = this.querySelector('.cat-arrow');
+          arrow.textContent = this.classList.contains('cat-collapsed') ? '▶' : '▼';
+          var sibling = this.nextElementSibling;
+          while (sibling && sibling.classList.contains('cat-item') && !sibling.classList.contains('cat-group-header') && !sibling.classList.contains('subj-group-header')) {
+            sibling.style.display = this.classList.contains('cat-collapsed') ? 'none' : '';
+            sibling = sibling.nextElementSibling;
+          }
+          try {
+            var col = {};
+            var allSubj = document.querySelectorAll('.subj-group-header.subj-collapsed');
+            for (var i = 0; i < allSubj.length; i++) col['subj_' + allSubj[i].getAttribute('data-subj')] = true;
+            var allCat = document.querySelectorAll('.cat-group-header.cat-collapsed');
+            for (var i = 0; i < allCat.length; i++) col[allCat[i].getAttribute('data-cat')] = true;
+            localStorage.setItem('exam-collapsed', JSON.stringify(col));
+          } catch(e) {}
         };
-        ul.appendChild(li);
-        globalIdx++;
+        ul.appendChild(header);
+
+        // Items
+        for (var j = 0; j < items.length; j++) {
+          var item = items[j];
+          var li = document.createElement('div');
+          li.className = 'cat-item q-item';
+          if (isCollapsed || isSubjCollapsed) li.style.display = 'none';
+          if (item.idx === state.current) li.className += ' active';
+          if (state.progress.known[item.q.id]) li.className += ' known';
+          if (state.progress.wrong[item.q.id]) li.className += ' wrong';
+          li.innerHTML = '<span class="idx">' + (item.idx+1) + '</span><span class="q-text' + (!hasAnswer(item.q) ? ' q-text-no-answer' : '') + '">' + (!hasAnswer(item.q) ? '⚠ ' : '') + '第' + (item.idx+1) + '题</span>';
+          li.setAttribute('data-idx', item.idx);
+          li.onclick = function() {
+            state.current = parseInt(this.getAttribute('data-idx'));
+            state.revealed = false; state.selected = null; state.fillValue = '';
+            render();
+          };
+          ul.appendChild(li);
+          globalIdx++;
+        }
       }
     }
 
@@ -519,6 +560,7 @@
     var h = '<div class="q-card">';
     h += '<div class="q-meta">';
     h += '<span class="q-tag type">' + (typeNames[q.type]||q.type) + '</span>';
+    if (q.subject) h += '<span class="q-tag subj">' + escapeHtml(q.subject) + '</span>';
     if (q.category) h += '<span class="q-tag cat">' + escapeHtml(q.category) + '</span>';
     if (q.difficulty) { var dl = q.difficulty===1?'简单':q.difficulty===2?'中等':'困难'; h += '<span class="q-tag diff-'+q.difficulty+'">'+dl+'</span>'; }
     if (!hasAnswer(q)) h += '<span class="q-tag no-answer">⚠ 无答案</span>';
@@ -559,6 +601,7 @@
     h += '<button class="btn" id="starBtn">'+(state.progress.starred[q.id]?'⭐ 已收藏':'☆ 收藏')+'</button>';
     h += '<button class="btn" id="editAnswerBtn">✏️ 编辑答案</button>';
     h += '<button class="btn" id="editCatBtn">🏷️ 编辑分类</button>';
+    h += '<button class="btn" id="editSubjBtn">📚 编辑科目</button>';
     h += '<button class="btn btn-danger" id="deleteBtn">🗑️ 删除题目</button>';
     h += '</div>';
 
@@ -634,6 +677,8 @@
     if (editAnswerBtn) editAnswerBtn.onclick = function() { openAnswerEditor(q); };
     var editCatBtn = document.getElementById('editCatBtn');
     if (editCatBtn) editCatBtn.onclick = function() { openCategoryEditor(q); };
+    var editSubjBtn = document.getElementById('editSubjBtn');
+    if (editSubjBtn) editSubjBtn.onclick = function() { openSubjectEditor(q); };
     var deleteBtn = document.getElementById('deleteBtn');
     if (deleteBtn) deleteBtn.onclick = function() {
       if (confirm('确定删除这道题吗？')) {
@@ -709,6 +754,96 @@
       render();
     };
     document.getElementById('cancelCatBtn').onclick = function() {
+      div.remove();
+    };
+  }
+
+  function openSubjectEditor(q) {
+    var existing = document.getElementById('subjEditor');
+    if (existing) existing.remove();
+
+    var subjs = {};
+    for (var i = 0; i < state.questions.length; i++) {
+      var s = state.questions[i].subject || '';
+      if (s) subjs[s] = true;
+    }
+    var subjList = Object.keys(subjs).sort();
+
+    var div = document.createElement('div');
+    div.id = 'subjEditor';
+    div.className = 'cat-editor';
+
+    var html = '<h4>📚 批量编辑科目</h4>';
+    html += '<div class="cat-editor-row" style="margin-bottom:8px">';
+    html += '<label style="cursor:pointer"><input type="checkbox" id="subjSelectAll" checked> 全选</label>';
+    html += '</div>';
+    html += '<div class="subj-batch-list">';
+    for (var i = 0; i < state.questions.length; i++) {
+      var q2 = state.questions[i];
+      var subj2 = q2.subject || '未分科目';
+      html += '<label class="subj-batch-item" style="display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:13px;cursor:pointer;border-radius:4px">';
+      html += '<input type="checkbox" class="subj-check" data-qid="' + escapeAttr(q2.id) + '" checked>';
+      html += '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml((i+1) + '. ' + (q2.question||'').substring(0,40)) + '</span>';
+      html += '<span style="font-size:11px;color:var(--text2);flex-shrink:0">[' + escapeHtml(subj2) + ']</span>';
+      html += '</label>';
+    }
+    html += '</div>';
+    html += '<div class="cat-editor-row" style="margin-top:10px">';
+    html += '<span>设为科目：</span>';
+    html += '<select id="subjSelect">';
+    html += '<option value="">-- 选择已有科目 --</option>';
+    for (var i = 0; i < subjList.length; i++) {
+      html += '<option value="' + escapeAttr(subjList[i]) + '">' + escapeHtml(subjList[i]) + '</option>';
+    }
+    html += '</select>';
+    html += '</div>';
+    html += '<div class="cat-editor-row">';
+    html += '<span>或新建：</span>';
+    html += '<input type="text" id="subjInput" placeholder="输入新科目名..." value="">';
+    html += '</div>';
+    html += '<div class="editor-actions">';
+    html += '<button class="btn btn-primary" id="saveSubjBtn">💾 保存</button>';
+    html += '<button class="btn" id="cancelSubjBtn">取消</button>';
+    html += '</div>';
+
+    div.innerHTML = html;
+    document.querySelector('.content').insertBefore(div, document.querySelector('.quiz-area').nextSibling);
+
+    var checks = div.querySelectorAll('.subj-check');
+    document.getElementById('subjSelectAll').onchange = function() {
+      var checked = this.checked;
+      for (var i = 0; i < checks.length; i++) checks[i].checked = checked;
+    };
+
+    var subjSelect = document.getElementById('subjSelect');
+    var subjInput = document.getElementById('subjInput');
+    subjInput.oninput = function() {
+      if (subjInput.value.trim()) subjSelect.value = '';
+    };
+    subjSelect.onchange = function() {
+      if (subjSelect.value) subjInput.value = '';
+    };
+
+    document.getElementById('saveSubjBtn').onclick = function() {
+      var newSubj = subjInput.value.trim() || subjSelect.value;
+      if (!newSubj) { alert('请选择或输入科目名'); return; }
+      var selectedIds = {};
+      for (var i = 0; i < checks.length; i++) {
+        if (checks[i].checked) selectedIds[checks[i].getAttribute('data-qid')] = true;
+      }
+      var count = 0;
+      for (var i = 0; i < state.questions.length; i++) {
+        if (selectedIds[state.questions[i].id]) {
+          state.questions[i].subject = newSubj;
+          count++;
+        }
+      }
+      saveQuestionsToStorage();
+      buildIndex();
+      render();
+      alert('已修改 ' + count + ' 道题的科目为「' + newSubj + '」');
+    };
+    document.getElementById('cancelSubjBtn').onclick = function() {
       div.remove();
     };
   }
