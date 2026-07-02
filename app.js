@@ -346,7 +346,7 @@
       if (state.pendingImport[i]._valid) valid.push(state.pendingImport[i]);
     }
     if (!valid.length) { alert('没有有效题目'); return; }
-    state.questions = valid;
+    state.questions = state.questions.concat(valid);
     state.current = 0; state.revealed = false; state.selected = null; state.fillValue = '';
     state.pendingImport = null;
     localStorage.removeItem('exam-progress'); // clear old progress too
