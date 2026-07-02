@@ -1066,7 +1066,33 @@
     document.getElementById('searchInput').oninput = function() { state.current=0; state.revealed=false; buildIndex(); render(); };
     document.getElementById('filterMode').onchange = function() { state.current=0; state.revealed=false; buildIndex(); render(); };
     document.getElementById('categoryFilter').onchange = function() { state.current=0; state.revealed=false; buildIndex(); render(); };
-    document.getElementById('shuffleBtn').onclick = function() { buildIndex(); shuffle(state.indices); state.current=0; state.revealed=false; state.selected=null; render(); };
+    document.getElementById('shuffleBtn').onclick = function() {
+      buildIndex();
+      shuffle(state.indices);
+      for (var i = 0; i < state.questions.length; i++) {
+        var q = state.questions[i];
+        if ((q.type === 'single' || q.type === 'multiple') && q.options && q.options.length > 1) {
+          var ans = q.type === 'multiple' ? q.answer.slice() : q.answer;
+          var indices = [];
+          for (var k = 0; k < q.options.length; k++) indices.push(k);
+          shuffle(indices);
+          var newOpts = [];
+          for (var k = 0; k < indices.length; k++) newOpts.push(q.options[indices[k]]);
+          q.options = newOpts;
+          if (q.type === 'multiple') {
+            q.answer = [];
+            for (var k = 0; k < indices.length; k++) {
+              if (ans.indexOf(indices[k]) !== -1) q.answer.push(k);
+            }
+          } else {
+            q.answer = indices.indexOf(ans);
+          }
+        }
+      }
+      saveQuestionsToStorage();
+      uploadToCloud();
+      state.current=0; state.revealed=false; state.selected=null; render();
+    };
     document.getElementById('prevBtn').onclick = prev;
     document.getElementById('nextBtn').onclick = next;
     document.getElementById('themeBtn').onclick = function() {
