@@ -418,21 +418,72 @@
       ul.innerHTML = '<li style="cursor:default;color:var(--text2);text-align:center">无匹配题目</li>';
       return;
     }
+
+    // Group by category
+    var groups = {};
+    var groupOrder = [];
     for (var i = 0; i < state.indices.length; i++) {
       var q = state.questions[state.indices[i]];
-      var li = document.createElement('li');
-      if (i === state.current) li.className = 'active';
-      if (state.progress.known[q.id]) li.className += ' known';
-      if (state.progress.wrong[q.id]) li.className += ' wrong';
-      li.innerHTML = '<span class="idx">' + (i+1) + '</span><span class="q-text' + (!hasAnswer(q) ? ' q-text-no-answer' : '') + '">' + (!hasAnswer(q) ? '⚠ ' : '') + escapeHtml(q.question) + '</span>';
-      li.setAttribute('data-idx', i);
-      li.onclick = function() {
-        state.current = parseInt(this.getAttribute('data-idx'));
-        state.revealed = false; state.selected = null; state.fillValue = '';
-        render();
-      };
-      ul.appendChild(li);
+      var cat = q.category || '未分类';
+      if (!groups[cat]) { groups[cat] = []; groupOrder.push(cat); }
+      groups[cat].push({ idx: i, q: q });
     }
+
+    // Load collapsed state
+    var collapsed = {};
+    try { var cs = localStorage.getItem('exam-collapsed'); if (cs) collapsed = JSON.parse(cs); } catch(e) {}
+
+    var globalIdx = 0;
+    for (var g = 0; g < groupOrder.length; g++) {
+      var cat = groupOrder[g];
+      var items = groups[cat];
+      var isCollapsed = !!collapsed[cat];
+
+      // Category header
+      var header = document.createElement('div');
+      header.className = 'cat-group-header' + (isCollapsed ? ' cat-collapsed' : '');
+      header.setAttribute('data-cat', cat);
+      header.innerHTML = '<span>' + escapeHtml(cat) + ' <span class="cat-count">(' + items.length + '题)</span></span><span class="cat-arrow">' + (isCollapsed ? '▶' : '▼') + '</span>';
+      header.onclick = function() {
+        var c = this.getAttribute('data-cat');
+        this.classList.toggle('cat-collapsed');
+        var arrow = this.querySelector('.cat-arrow');
+        arrow.textContent = this.classList.contains('cat-collapsed') ? '▶' : '▼';
+        try {
+          var col = {};
+          var allHeaders = document.querySelectorAll('.cat-group-header.cat-collapsed');
+          for (var i = 0; i < allHeaders.length; i++) col[allHeaders[i].getAttribute('data-cat')] = true;
+          localStorage.setItem('exam-collapsed', JSON.stringify(col));
+        } catch(e) {}
+      };
+      ul.appendChild(header);
+
+      // Items
+      for (var j = 0; j < items.length; j++) {
+        var item = items[j];
+        var li = document.createElement('li');
+        li.className = 'cat-item';
+        if (isCollapsed) li.style.display = 'none';
+        if (item.idx === state.current) li.className += ' active';
+        if (state.progress.known[item.q.id]) li.className += ' known';
+        if (state.progress.wrong[item.q.id]) li.className += ' wrong';
+        li.innerHTML = '<span class="idx">' + (item.idx+1) + '</span><span class="q-text' + (!hasAnswer(item.q) ? ' q-text-no-answer' : '') + '">' + (!hasAnswer(item.q) ? '⚠ ' : '') + escapeHtml(item.q.question) + '</span>';
+        li.setAttribute('data-idx', item.idx);
+        li.onclick = function() {
+          state.current = parseInt(this.getAttribute('data-idx'));
+          state.revealed = false; state.selected = null; state.fillValue = '';
+          render();
+        };
+        ul.appendChild(li);
+        globalIdx++;
+      }
+    }
+
+    // Scroll active item into view
+    setTimeout(function() {
+      var active = ul.querySelector('li.active');
+      if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, 50);
   }
 
   function hasAnswer(q) {
@@ -502,6 +553,7 @@
     h += '<button class="btn'+(state.progress.wrong[q.id]?' btn-danger':'')+'" id="wrongBtn">'+(state.progress.wrong[q.id]?'✗ 错题':'加入错题')+'</button>';
     h += '<button class="btn" id="starBtn">'+(state.progress.starred[q.id]?'⭐ 已收藏':'☆ 收藏')+'</button>';
     h += '<button class="btn" id="editAnswerBtn">✏️ 编辑答案</button>';
+    h += '<button class="btn" id="editCatBtn">🏷️ 编辑分类</button>';
     h += '<button class="btn btn-danger" id="deleteBtn">🗑️ 删除题目</button>';
     h += '</div>';
 
@@ -575,6 +627,8 @@
     if (addAnswerBtn) addAnswerBtn.onclick = function() { openAnswerEditor(q); };
     var editAnswerBtn = document.getElementById('editAnswerBtn');
     if (editAnswerBtn) editAnswerBtn.onclick = function() { openAnswerEditor(q); };
+    var editCatBtn = document.getElementById('editCatBtn');
+    if (editCatBtn) editCatBtn.onclick = function() { openCategoryEditor(q); };
     var deleteBtn = document.getElementById('deleteBtn');
     if (deleteBtn) deleteBtn.onclick = function() {
       if (confirm('确定删除这道题吗？')) {
@@ -585,6 +639,72 @@
         saveQuestionsToStorage();
         buildCategoryFilter(); buildIndex(); render();
       }
+    };
+  }
+
+  function openCategoryEditor(q) {
+    var card = document.querySelector('.q-card');
+    if (!card) return;
+
+    var existing = document.getElementById('catEditor');
+    if (existing) existing.remove();
+
+    // Get all existing categories
+    var cats = {};
+    for (var i = 0; i < state.questions.length; i++) {
+      var c = state.questions[i].category || '';
+      if (c) cats[c] = true;
+    }
+    var catList = Object.keys(cats).sort();
+
+    var div = document.createElement('div');
+    div.id = 'catEditor';
+    div.className = 'cat-editor';
+
+    var html = '<h4>🏷️ 编辑分类</h4>';
+    html += '<div class="cat-editor-row">';
+    html += '<span>当前分类：</span>';
+    html += '<select id="catSelect">';
+    html += '<option value="">-- 选择已有分类 --</option>';
+    for (var i = 0; i < catList.length; i++) {
+      var sel = (catList[i] === q.category) ? ' selected' : '';
+      html += '<option value="' + escapeAttr(catList[i]) + '"' + sel + '>' + escapeHtml(catList[i]) + '</option>';
+    }
+    html += '</select>';
+    html += '</div>';
+    html += '<div class="cat-editor-row">';
+    html += '<span>或新建：</span>';
+    html += '<input type="text" id="catInput" placeholder="输入新分类名..." value="">';
+    html += '</div>';
+    html += '<div class="editor-actions">';
+    html += '<button class="btn btn-primary" id="saveCatBtn">💾 保存</button>';
+    html += '<button class="btn" id="cancelCatBtn">取消</button>';
+    html += '</div>';
+
+    div.innerHTML = html;
+    card.appendChild(div);
+
+    var catSelect = document.getElementById('catSelect');
+    var catInput = document.getElementById('catInput');
+
+    catInput.oninput = function() {
+      if (catInput.value.trim()) catSelect.value = '';
+    };
+    catSelect.onchange = function() {
+      if (catSelect.value) catInput.value = '';
+    };
+
+    document.getElementById('saveCatBtn').onclick = function() {
+      var newCat = catInput.value.trim() || catSelect.value;
+      if (!newCat) { alert('请选择或输入分类名'); return; }
+      q.category = newCat;
+      saveQuestionsToStorage();
+      buildCategoryFilter();
+      buildIndex();
+      render();
+    };
+    document.getElementById('cancelCatBtn').onclick = function() {
+      div.remove();
     };
   }
 
