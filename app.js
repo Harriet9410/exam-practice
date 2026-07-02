@@ -2,7 +2,7 @@
   'use strict';
 
   var state = {
-    questions: (typeof QUESTIONS !== 'undefined') ? QUESTIONS : [],
+    questions: getInitialQuestions(),
     indices: [],
     current: 0,
     revealed: false,
@@ -130,42 +130,67 @@
 
   function parseQuestions(text) {
     if (!text || !text.trim()) return [];
-    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n{3,}/g, '\n\n');
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-    // Pre-process: merge standalone option letter lines with following content
-    // e.g. "A\nHe doesn't like..." -> "A. He doesn't like..."
-    var rawLines = text.split('\n');
-    var merged = [];
-    for (var i = 0; i < rawLines.length; i++) {
-      var lt = rawLines[i].trim();
-      // Check if this line is a standalone option letter (A, B, C, D, a, b, c, d)
-      if (/^[A-Da-d]$/.test(lt) && i + 1 < rawLines.length) {
-        var nextLine = rawLines[i + 1].trim();
-        if (nextLine && !/^[A-Da-d]$/.test(nextLine) && !/^(?:答案|参考答案|标准答案|正确答案|解析|Answer)/i.test(nextLine)) {
-          merged.push(lt + '. ' + nextLine);
-          i++;
-          continue;
-        }
+    var sections = [];
+    var allBreaks = [];
+    var re1 = /(?:^|\n)\s*[Uu](?:nit)?\s*(\d+)\s*[\n\r]/g;
+    var re2 = /(?:^|\n)\s*(视听说|听力|阅读|写作|翻译|口语)\s*[\n\r]/g;
+    var m;
+    while ((m = re1.exec(text)) !== null) allBreaks.push({ idx: m.index, cat: 'Unit ' + m[1] });
+    while ((m = re2.exec(text)) !== null) allBreaks.push({ idx: m.index, cat: m[1] });
+    allBreaks.sort(function(a, b) { return a.idx - b.idx; });
+
+    if (allBreaks.length === 0) {
+      sections.push({ cat: '', text: text });
+    } else {
+      if (allBreaks[0].idx > 0) sections.push({ cat: '', text: text.substring(0, allBreaks[0].idx) });
+      for (var i = 0; i < allBreaks.length; i++) {
+        var start = allBreaks[i].idx;
+        var end = (i + 1 < allBreaks.length) ? allBreaks[i + 1].idx : text.length;
+        sections.push({ cat: allBreaks[i].cat, text: text.substring(start, end) });
       }
-      // Also merge standalone question number with next line content
-      // e.g. "1\nWhat does he mean?" -> "1. What does he mean?"
-      if (/^\d{1,4}$/.test(lt) && i + 1 < rawLines.length) {
-        var nextLine = rawLines[i + 1].trim();
-        if (nextLine && !/^\d{1,4}$/.test(nextLine) && !/^[A-Da-d]$/.test(nextLine) && !/^(?:答案|参考答案|标准答案|正确答案|解析|Answer)/i.test(nextLine)) {
-          merged.push(lt + '. ' + nextLine);
-          i++;
-          continue;
-        }
-      }
-      merged.push(rawLines[i]);
     }
-    text = merged.join('\n');
 
-    var blocks = [], lines = text.split('\n'), current = [];
+    var allQuestions = [];
+    for (var s = 0; s < sections.length; s++) {
+      var secText = sections[s].text.replace(/^\s*[Uu](?:nit)?\s*\d+\s*\n/, '').replace(/^\s*(视听说|听力|阅读|写作|翻译|口语)\s*\n/, '');
+      var qs = parseSection(secText, sections[s].cat);
+      for (var i = 0; i < qs.length; i++) allQuestions.push(qs[i]);
+    }
+    return allQuestions;
+  }
+
+  function parseSection(text, defaultCat) {
+    text = text.replace(/\n{3,}/g, '\n\n');
+    var lines = text.split('\n');
+    // First pass: remove empty lines to get clean content
+    var cleanLines = [];
     for (var i = 0; i < lines.length; i++) {
       var t = lines[i].trim();
-      if (!t) { if (current.length) current.push(''); continue; }
-      var isQ = /^\d{1,4}\s*[.、)）.．\]:：]?\s*$/.test(t) || /^\d{1,4}\s*[.、)）.．\]:：]\s+/.test(t) || /^[(（]\d{1,4}\s*[)）]\s*/.test(t) || /^第\s*\d{1,4}\s*题/.test(t);
+      if (t) cleanLines.push(t);
+    }
+
+    // Second pass: merge standalone option letter with next line
+    var merged = [];
+    for (var i = 0; i < cleanLines.length; i++) {
+      var lt = cleanLines[i];
+      if (/^[A-Da-d]$/.test(lt) && i + 1 < cleanLines.length) {
+        var nxt = cleanLines[i + 1];
+        if (!/^[A-Da-d]$/.test(nxt) && !/^[Uu](?:nit)?\s*\d+$/.test(nxt) && !/^\d{1,3}$/.test(nxt)) {
+          merged.push(lt + '. ' + nxt); i++; continue;
+        }
+      }
+      var stuck = lt.match(/^([A-Da-d])(True|False|正确|错误|对|错|Yes|No)$/i);
+      if (stuck) { merged.push(stuck[1] + '. ' + stuck[2]); continue; }
+      merged.push(lt);
+    }
+
+    // Third pass: split into question blocks
+    var blocks = [], current = [];
+    for (var i = 0; i < merged.length; i++) {
+      var t = merged[i];
+      var isQ = /^\d{1,3}\s*[.、)）.．\]:：]/.test(t) || /^\d{1,3}\.\s*\S/.test(t) || /^\d{1,3}$/.test(t);
       if (isQ && current.length) { blocks.push(current.join('\n')); current = []; }
       current.push(t);
     }
@@ -173,13 +198,13 @@
 
     var questions = [];
     for (var b = 0; b < blocks.length; b++) {
-      var q = parseBlock(blocks[b], b);
+      var q = parseBlock(blocks[b], questions.length, defaultCat);
       if (q) questions.push(q);
     }
     return questions;
   }
 
-  function parseBlock(block, idx) {
+  function parseBlock(block, idx, defaultCat) {
     var lines = block.split('\n');
     var filtered = [];
     for (var i = 0; i < lines.length; i++) {
@@ -187,46 +212,34 @@
     }
     if (!filtered.length) return null;
 
-    var q = { id:'imp_'+Date.now()+'_'+idx, type:'qa', category:'', difficulty:1, question:'', options:[], answer:'', explanation:'' };
+    var q = { id:'imp_'+Date.now()+'_'+idx, type:'qa', category: defaultCat||'', difficulty:1, question:'', options:[], answer:'', explanation:'' };
     var qLines = [], optLines = [], ansBuf = [], expLines = [];
-    var inAns = false, inExp = false, category = '';
+    var inAns = false, inExp = false, category = defaultCat || '';
 
     for (var i = 0; i < filtered.length; i++) {
       var line = filtered[i];
-
       var cm = line.match(/^(?:分类|章节|知识点)[：:]\s*(.+)/);
       if (cm) { category = cm[1].trim(); continue; }
-      var dm = line.match(/^难度[：:]\s*(.+)/);
-      if (dm) { var d = dm[1].trim(); q.difficulty = /难|3/i.test(d) ? 3 : /中|2/i.test(d) ? 2 : 1; continue; }
-
-      if (/^(?:解析|说明|分析)[：:]/.test(line)) { inExp = true; inAns = false; expLines.push(line.replace(/^[^：:]+[：:]\s*/, '')); continue; }
+      if (/^难度[：:]\s*/.test(line)) { var d = line.replace(/^难度[：:]\s*/, '').trim(); q.difficulty = /难|3/i.test(d)?3:/中|2/i.test(d)?2:1; continue; }
+      if (/^(?:解析|说明|分析)[：:]/.test(line)) { inExp=true; inAns=false; expLines.push(line.replace(/^[^：:]+[：:]\s*/, '')); continue; }
       if (inExp) { expLines.push(line); continue; }
+      if (/^(?:答案|参考答案|标准答案|正确答案|Answer)[：:]\s*/i.test(line)) { inAns=true; inExp=false; var ac=line.replace(/^(?:答案|参考答案|标准答案|正确答案|Answer)[：:]\s*/i,'').trim(); if(ac)ansBuf.push(ac); continue; }
+      if (inAns) { if(/^(?:解析|说明|分析)[：:]/.test(line)||/^[A-Da-d]\s*[.、)）.．]/.test(line)){inAns=false;}else{ansBuf.push(line);continue;} }
 
-      if (/^(?:答案|参考答案|标准答案|正确答案|Answer)[：:]\s*/i.test(line)) {
-        inAns = true; inExp = false;
-        var ansContent = line.replace(/^(?:答案|参考答案|标准答案|正确答案|Answer)[：:]\s*/i, '').trim();
-        if (ansContent) ansBuf.push(ansContent);
+      if (/^[A-Da-d]\s*[.、)）.．]\s*/.test(line)) {
+        var optContent = line.replace(/^[A-Da-d]\s*[.、)）.．]\s*/, '').trim();
+        if (optContent.length > 200 && !/^(True|False|正确|错误)/i.test(optContent)) {
+          qLines.push(line);
+        } else {
+          optLines.push(line);
+        }
         continue;
       }
-      if (inAns) {
-        if (/^(?:解析|说明|分析)[：:]/.test(line)) { inAns = false; }
-        else if (/^[A-Za-z]\s*[.、)）.．]/.test(line) || /^[(（]\s*[A-Za-z]\s*[)）]/.test(line)) { inAns = false; }
-        else { ansBuf.push(line); continue; }
-      }
 
-      if (/^[A-Za-z]\s*[.、)）.．]\s*/.test(line) || /^[(（]\s*[A-Za-z]\s*[)）]\s*/.test(line)) { optLines.push(line); continue; }
-
-      // Standalone answer line: just a letter like "A" or "AB" or "对" etc.
-      if (!inAns && !inExp && optLines.length > 0 && qLines.length > 0) {
+      if (!inAns && !inExp && optLines.length > 0) {
         var cleanAns = line.replace(/[.、)）.．\s]+$/, '').trim();
-        if (/^[A-Za-z]{1,4}$/.test(cleanAns)) {
-          ansBuf.push(cleanAns);
-          continue;
-        }
-        if (/^(对|正确|√|错|错误|×)$/.test(cleanAns)) {
-          ansBuf.push(cleanAns);
-          continue;
-        }
+        if (/^[A-Da-d]{1,4}$/.test(cleanAns)) { ansBuf.push(cleanAns); continue; }
+        if (/^(对|正确|√|错|错误|×)$/.test(cleanAns)) { ansBuf.push(cleanAns); continue; }
       }
 
       qLines.push(line);
@@ -234,35 +247,45 @@
 
     var answerText = ansBuf.join(' ').trim();
     var first = qLines[0] || '';
-    q.question = first.replace(/^\d{1,4}\s*[.、)）.．\]:：]\s*|^\(?\d{1,4}\)?\s*[.、)）.．\]:：]?\s*|^第\s*\d{1,4}\s*题\s*[.、:：]?\s*/, '').trim();
-    if (qLines.length > 1) q.question += '\n' + qLines.slice(1).join('\n');
+    q.question = first.replace(/^\d{1,3}\s*[.、)）.．\]:：]\s*/, '').trim();
+    if (qLines.length > 1) { for (var i = 1; i < qLines.length; i++) q.question += '\n' + qLines[i]; }
     q.question = q.question.trim();
     if (category) q.category = category;
 
     if (optLines.length) {
-      q.options = optLines.map(function(l) { return l.replace(/^[A-Za-z]\s*[.、)）.．]\s*/, '').replace(/^[(（]\s*[A-Za-z]\s*[)）]\s*/, '').trim(); });
+      q.options = optLines.map(function(l) { return l.replace(/^[A-Da-d]\s*[.、)）.．]\s*/, '').trim(); });
     }
     q.explanation = expLines.join('\n').trim();
     q.answer = answerText;
 
-    if (optLines.length) {
+    if (optLines.length > 0) {
       var ans = answerText.toUpperCase().replace(/[^A-Z]/g, '');
-      if (ans.length > 1) { q.type = 'multiple'; q.answer = ans.split('').map(function(c){return c.charCodeAt(0)-65;}); }
-      else if (ans.length === 1) { q.type = 'single'; q.answer = ans.charCodeAt(0) - 65; }
-      else { q.type = 'single'; q.answer = 0; }
+      var optJoined = q.options.join(' ').toLowerCase();
+      if (q.options.length === 2 && /true/.test(optJoined) && /false/.test(optJoined)) {
+        q.type = 'judge';
+        q.answer = /true/i.test(answerText) ? true : (/false/i.test(answerText) ? false : '');
+      } else if (ans.length > 1) {
+        q.type = 'multiple'; q.answer = ans.split('').map(function(c){return c.charCodeAt(0)-65;});
+      } else if (ans.length === 1) {
+        q.type = 'single'; q.answer = ans.charCodeAt(0) - 65;
+      } else {
+        q.type = 'single'; q.answer = '';
+      }
     } else if (/^(对|正确|√|是|T|True|✔|✓)$/i.test(answerText.trim()) || /^(错|错误|×|否|F|False|✘|✗)$/i.test(answerText.trim())) {
       q.type = 'judge'; q.answer = /^(对|正确|√|是|T|True|✔|✓)$/i.test(answerText.trim());
-    } else if (/_{2,}|【\s*】|（\s*）/.test(q.question)) {
+    } else if (/_{2,}|【\s*】|（\s*）|\(\s*\)/.test(q.question)) {
       q.type = 'fill'; q.answer = answerText;
     } else {
       q.type = 'qa'; q.answer = answerText;
     }
 
+    if (!q.question.trim()) {
+      var numMatch = (qLines[0]||'').match(/^(\d{1,3})/);
+      q.question = numMatch ? '第' + numMatch[1] + '题' : '（题目文本缺失）';
+    }
+
     q._valid = true;
-    // Only invalid if choice question has no options
     if ((q.type === 'single' || q.type === 'multiple') && (!q.options || q.options.length < 2)) q._valid = false;
-    // If question text is empty, use a placeholder
-    if (!q.question.trim()) q.question = '（题目文本缺失）';
 
     return q;
   }
@@ -305,7 +328,7 @@
         for (var j = 0; j < q.options.length; j++) html += String.fromCharCode(65+j) + '. ' + escapeHtml(q.options[j]) + '  ';
         html += '</div>';
       }
-      html += '<div class="preview-item-ans">答案：' + escapeHtml(ansStr) + '</div>';
+      html += '<div class="preview-item-ans">' + (ansStr ? '答案：' + escapeHtml(ansStr) : '<span style="color:var(--red)">⚠ 无答案</span>') + '</div>';
       var div = document.createElement('div');
       div.className = 'preview-item';
       div.innerHTML = html;
@@ -325,6 +348,8 @@
     state.questions = valid;
     state.current = 0; state.revealed = false; state.selected = null; state.fillValue = '';
     state.pendingImport = null;
+    localStorage.removeItem('exam-progress'); // clear old progress too
+    saveQuestionsToStorage();
     buildCategoryFilter(); buildIndex(); render();
     document.getElementById('previewArea').style.display = 'none';
     document.getElementById('fileStatus').className = 'file-status hidden';
@@ -399,7 +424,7 @@
       if (i === state.current) li.className = 'active';
       if (state.progress.known[q.id]) li.className += ' known';
       if (state.progress.wrong[q.id]) li.className += ' wrong';
-      li.innerHTML = '<span class="idx">' + (i+1) + '</span><span class="q-text">' + escapeHtml(q.question) + '</span>';
+      li.innerHTML = '<span class="idx">' + (i+1) + '</span><span class="q-text' + (!hasAnswer(q) ? ' q-text-no-answer' : '') + '">' + (!hasAnswer(q) ? '⚠ ' : '') + escapeHtml(q.question) + '</span>';
       li.setAttribute('data-idx', i);
       li.onclick = function() {
         state.current = parseInt(this.getAttribute('data-idx'));
@@ -408,6 +433,12 @@
       };
       ul.appendChild(li);
     }
+  }
+
+  function hasAnswer(q) {
+    if (q.type === 'single' || q.type === 'multiple') return typeof q.answer === 'number' || (Array.isArray(q.answer) && q.answer.length > 0);
+    if (q.type === 'judge') return typeof q.answer === 'boolean';
+    return !!q.answer && String(q.answer).trim().length > 0;
   }
 
   function renderQuiz() {
@@ -434,6 +465,7 @@
     h += '<span class="q-tag type">' + (typeNames[q.type]||q.type) + '</span>';
     if (q.category) h += '<span class="q-tag cat">' + escapeHtml(q.category) + '</span>';
     if (q.difficulty) { var dl = q.difficulty===1?'简单':q.difficulty===2?'中等':'困难'; h += '<span class="q-tag diff-'+q.difficulty+'">'+dl+'</span>'; }
+    if (!hasAnswer(q)) h += '<span class="q-tag no-answer">⚠ 无答案</span>';
     h += '</div>';
     h += '<div class="q-number">第 ' + (state.current+1) + ' / ' + state.indices.length + ' 题</div>';
     h += '<div class="q-question">' + escapeHtml(q.question) + '</div>';
@@ -446,7 +478,7 @@
         var cls = '';
         var sel = multi ? (state.selected||[]) : (state.selected!==null ? [state.selected] : []);
         if (sel.indexOf(i) !== -1) cls = 'selected';
-        if (state.revealed) {
+        if (state.revealed && hasAnswer(q)) {
           var correct = q.type==='judge' ? (q.answer?[0]:[1]) : (multi?q.answer:[q.answer]);
           if (correct.indexOf(i) !== -1) cls += ' correct';
           else if (sel.indexOf(i) !== -1) cls += ' wrong-answer';
@@ -459,7 +491,9 @@
     }
 
     h += '<div class="q-actions">';
-    if (!state.revealed && (q.type==='single'||q.type==='multiple'||q.type==='judge'||q.type==='fill')) {
+    if (!hasAnswer(q)) {
+      h += '<button class="btn btn-warn" id="addAnswerBtn">✏️ 添加答案</button>';
+    } else if (!state.revealed && (q.type==='single'||q.type==='multiple'||q.type==='judge'||q.type==='fill')) {
       h += '<button class="btn btn-primary" id="submitBtn">提交答案</button>';
     } else {
       h += '<button class="btn" id="revealBtn">'+(state.revealed?'隐藏答案':'显示答案')+'</button>';
@@ -467,9 +501,11 @@
     h += '<button class="btn'+(state.progress.known[q.id]?' btn-primary':'')+'" id="knownBtn">'+(state.progress.known[q.id]?'✓ 已掌握':'标记掌握')+'</button>';
     h += '<button class="btn'+(state.progress.wrong[q.id]?' btn-danger':'')+'" id="wrongBtn">'+(state.progress.wrong[q.id]?'✗ 错题':'加入错题')+'</button>';
     h += '<button class="btn" id="starBtn">'+(state.progress.starred[q.id]?'⭐ 已收藏':'☆ 收藏')+'</button>';
+    h += '<button class="btn" id="editAnswerBtn">✏️ 编辑答案</button>';
+    h += '<button class="btn btn-danger" id="deleteBtn">🗑️ 删除题目</button>';
     h += '</div>';
 
-    if (state.revealed) {
+    if (state.revealed && hasAnswer(q)) {
       h += '<div class="answer-area"><div class="answer-label">参考答案</div><div class="answer-text">';
       if (q.type==='single'||q.type==='multiple'||q.type==='judge') {
         var ansOpts = q.type==='judge'?['正确','错误']:q.options;
@@ -535,6 +571,132 @@
       else state.progress.starred[q.id] = true;
       saveProgress(); updateStats(); renderList(); renderQuiz();
     };
+    var addAnswerBtn = document.getElementById('addAnswerBtn');
+    if (addAnswerBtn) addAnswerBtn.onclick = function() { openAnswerEditor(q); };
+    var editAnswerBtn = document.getElementById('editAnswerBtn');
+    if (editAnswerBtn) editAnswerBtn.onclick = function() { openAnswerEditor(q); };
+    var deleteBtn = document.getElementById('deleteBtn');
+    if (deleteBtn) deleteBtn.onclick = function() {
+      if (confirm('确定删除这道题吗？')) {
+        var qi = state.indices[state.current];
+        state.questions.splice(qi, 1);
+        state.revealed = false; state.selected = null; state.fillValue = '';
+        if (state.current >= state.indices.length - 1 && state.current > 0) state.current--;
+        saveQuestionsToStorage();
+        buildCategoryFilter(); buildIndex(); render();
+      }
+    };
+  }
+
+  function openAnswerEditor(q) {
+    var card = document.querySelector('.q-card');
+    if (!card) return;
+
+    var existing = document.getElementById('answerEditor');
+    if (existing) existing.remove();
+
+    var div = document.createElement('div');
+    div.id = 'answerEditor';
+    div.className = 'answer-editor';
+
+    var html = '<h4>✏️ 设置答案</h4>';
+
+    if (q.type === 'single') {
+      html += '<p class="editor-hint">选择正确选项：</p>';
+      html += '<div class="editor-options">';
+      for (var i = 0; i < q.options.length; i++) {
+        var checked = (typeof q.answer === 'number' && q.answer === i) ? ' checked' : '';
+        html += '<label class="editor-opt"><input type="radio" name="ansRadio" value="' + i + '"' + checked + '> ' + String.fromCharCode(65+i) + '. ' + escapeHtml(q.options[i]) + '</label>';
+      }
+      html += '</div>';
+    } else if (q.type === 'multiple') {
+      html += '<p class="editor-hint">选择所有正确选项（可多选）：</p>';
+      html += '<div class="editor-options">';
+      for (var i = 0; i < q.options.length; i++) {
+        var checked = (Array.isArray(q.answer) && q.answer.indexOf(i) !== -1) ? ' checked' : '';
+        html += '<label class="editor-opt"><input type="checkbox" name="ansCheck" value="' + i + '"' + checked + '> ' + String.fromCharCode(65+i) + '. ' + escapeHtml(q.options[i]) + '</label>';
+      }
+      html += '</div>';
+    } else if (q.type === 'judge') {
+      var chkT = (q.answer === true) ? ' checked' : '';
+      var chkF = (q.answer === false) ? ' checked' : '';
+      html += '<p class="editor-hint">选择答案：</p>';
+      html += '<label class="editor-opt"><input type="radio" name="ansJudge" value="true"' + chkT + '> 正确</label>';
+      html += '<label class="editor-opt"><input type="radio" name="ansJudge" value="false"' + chkF + '> 错误</label>';
+    } else {
+      html += '<p class="editor-hint">输入答案：</p>';
+      html += '<input type="text" class="q-fill" id="ansTextInput" value="' + escapeAttr(String(q.answer || '')) + '" placeholder="输入正确答案...">';
+    }
+
+    html += '<p class="editor-hint" style="margin-top:12px">解析（可选）：</p>';
+    html += '<textarea class="paste-area" id="ansExplanation" style="min-height:60px" placeholder="输入解析说明...">' + escapeHtml(q.explanation || '') + '</textarea>';
+    html += '<div class="editor-actions">';
+    html += '<button class="btn btn-primary" id="saveAnswerBtn">💾 保存</button>';
+    html += '<button class="btn" id="cancelAnswerBtn">取消</button>';
+    html += '</div>';
+
+    div.innerHTML = html;
+    card.appendChild(div);
+
+    document.getElementById('saveAnswerBtn').onclick = function() {
+      if (q.type === 'single') {
+        var radios = document.getElementsByName('ansRadio');
+        for (var i = 0; i < radios.length; i++) {
+          if (radios[i].checked) { q.answer = parseInt(radios[i].value); break; }
+        }
+      } else if (q.type === 'multiple') {
+        var checks = document.getElementsByName('ansCheck');
+        q.answer = [];
+        for (var i = 0; i < checks.length; i++) {
+          if (checks[i].checked) q.answer.push(parseInt(checks[i].value));
+        }
+      } else if (q.type === 'judge') {
+        var judges = document.getElementsByName('ansJudge');
+        for (var i = 0; i < judges.length; i++) {
+          if (judges[i].checked) { q.answer = judges[i].value === 'true'; break; }
+        }
+      } else {
+        var inp = document.getElementById('ansTextInput');
+        if (inp && inp.value.trim()) q.answer = inp.value.trim();
+      }
+      var exp = document.getElementById('ansExplanation');
+      if (exp) q.explanation = exp.value.trim();
+
+      state.revealed = false;
+      saveQuestionsToStorage();
+      renderQuiz();
+    };
+    document.getElementById('cancelAnswerBtn').onclick = function() {
+      div.remove();
+    };
+  }
+
+  function saveQuestionsToStorage() {
+    try {
+      var data = state.questions.map(function(q) {
+        var c = {}; for (var k in q) if (k.charAt(0) !== '_') c[k] = q[k];
+        return c;
+      });
+      localStorage.setItem('exam-questions', JSON.stringify(data));
+    } catch(e) {}
+  }
+
+  function loadQuestionsFromStorage() {
+    try {
+      var s = localStorage.getItem('exam-questions');
+      if (s) {
+        var data = JSON.parse(s);
+        if (data && data.length) return data;
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  function getInitialQuestions() {
+    var stored = loadQuestionsFromStorage();
+    if (stored) return stored;
+    if (typeof QUESTIONS !== 'undefined' && QUESTIONS && QUESTIONS.length) return QUESTIONS;
+    return [];
   }
 
   function submitAnswer() {
@@ -612,7 +774,11 @@
     var fileInput = document.getElementById('fileInput');
     if (fileInput) {
       fileInput.onchange = function(e) {
-        if (e.target.files && e.target.files[0]) readFile(e.target.files[0]);
+        if (e.target.files && e.target.files[0]) {
+          // Clear old cached questions before importing new file
+          localStorage.removeItem('exam-questions');
+          readFile(e.target.files[0]);
+        }
       };
     }
     var parseBtn = document.getElementById('parseBtn');
@@ -620,6 +786,7 @@
       parseBtn.onclick = function() {
         var text = document.getElementById('pasteArea').value;
         if (!text.trim()) { alert('请先粘贴题目文本'); return; }
+        localStorage.removeItem('exam-questions');
         var questions = parseQuestions(text);
         showPreview(questions);
         if (!questions.length) alert('未能解析出题目，请检查格式');
