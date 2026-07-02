@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>刷题练习</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>📚 刷题练习</h1>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="header-right">
+    <button class="btn-icon" id="themeBtn" title="切换主题">🌙</button>
+    <button class="btn-icon" id="exportBtn" title="导出题目JSON">💾</button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <input type="text" id="searchInput" class="search" placeholder="🔍 搜索题目...">
+  <select id="filterMode" class="select">
+    <option value="all">全部题目</option>
+    <option value="unknown">未掌握</option>
+    <option value="known">已掌握</option>
+    <option value="starred">收藏</option>
+    <option value="wrong">错题</option>
+  </select>
+  <select id="categoryFilter" class="select">
+    <option value="">全部分类</option>
+  </select>
+  <button id="shuffleBtn" class="btn">🔀 打乱</button>
+  <button id="resetProgressBtn" class="btn btn-danger">重置进度</button>
+</div>
+
+<div class="main-area">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span>题目列表</span>
+      <span id="listCount" class="list-count"></span>
+    </div>
+    <ul id="questionList" class="question-list"></ul>
+  </aside>
+  <main class="content">
+    <div id="quizArea" class="quiz-area"></div>
+
+    <div id="importSection" class="import-section">
+      <h3 class="import-toggle" id="importToggle">📥 导入题目 ▶</h3>
+      <div id="importBody" class="import-body" style="display:none">
+      <div class="file-row">
+        <span>选择文件：</span>
+        <input type="file" id="fileInput" accept=".txt,.doc,.docx,.pdf">
+      </div>
+      <div id="fileStatus" class="file-status hidden"></div>
+      <p class="import-hint">或从 Word/PDF 复制文本，粘贴到下方：</p>
+      <textarea id="pasteArea" class="paste-area" placeholder="粘贴题目文本...&#10;&#10;格式示例：&#10;1. 题目？&#10;A. 选项A&#10;B. 选项B&#10;C. 选项C&#10;D. 选项D&#10;答案：A&#10;解析：说明"></textarea>
+      <button class="btn btn-primary" id="parseBtn">🔍 解析文本</button>
+      <div id="previewArea" style="display:none">
+        <h4 style="margin:12px 0 8px">解析结果 <span id="previewCount" style="color:var(--accent);font-weight:600"></span></h4>
+        <div id="previewList" class="preview-list"></div>
+        <button class="btn btn-primary" id="confirmImport">✅ 确认导入</button>
+      </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="nav-buttons">
+  <button id="prevBtn" class="btn">⬅ 上一题</button>
+  <span id="position" class="position"></span>
+  <button id="nextBtn" class="btn">下一题 ➡</button>
+</div>
+
+<footer>
+  <span>快捷键：<kbd>←</kbd> 上一题 <kbd>→</kbd> 下一题 <kbd>Space</kbd> 答案 <kbd>S</kbd> 收藏 <kbd>K</kbd> 掌握</span>
+</footer>
+
+<script src="questions.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
