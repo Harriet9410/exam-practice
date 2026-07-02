@@ -449,6 +449,11 @@
         this.classList.toggle('cat-collapsed');
         var arrow = this.querySelector('.cat-arrow');
         arrow.textContent = this.classList.contains('cat-collapsed') ? '▶' : '▼';
+        var sibling = this.nextElementSibling;
+        while (sibling && sibling.classList.contains('cat-item') && !sibling.classList.contains('cat-group-header')) {
+          sibling.style.display = this.classList.contains('cat-collapsed') ? 'none' : '';
+          sibling = sibling.nextElementSibling;
+        }
         try {
           var col = {};
           var allHeaders = document.querySelectorAll('.cat-group-header.cat-collapsed');
@@ -461,13 +466,13 @@
       // Items
       for (var j = 0; j < items.length; j++) {
         var item = items[j];
-        var li = document.createElement('li');
-        li.className = 'cat-item';
+        var li = document.createElement('div');
+        li.className = 'cat-item q-item';
         if (isCollapsed) li.style.display = 'none';
         if (item.idx === state.current) li.className += ' active';
         if (state.progress.known[item.q.id]) li.className += ' known';
         if (state.progress.wrong[item.q.id]) li.className += ' wrong';
-        li.innerHTML = '<span class="idx">' + (item.idx+1) + '</span><span class="q-text' + (!hasAnswer(item.q) ? ' q-text-no-answer' : '') + '">' + (!hasAnswer(item.q) ? '⚠ ' : '') + escapeHtml(item.q.question) + '</span>';
+        li.innerHTML = '<span class="idx">' + (item.idx+1) + '</span><span class="q-text' + (!hasAnswer(item.q) ? ' q-text-no-answer' : '') + '">' + (!hasAnswer(item.q) ? '⚠ ' : '') + '第' + (item.idx+1) + '题</span>';
         li.setAttribute('data-idx', item.idx);
         li.onclick = function() {
           state.current = parseInt(this.getAttribute('data-idx'));
@@ -481,7 +486,7 @@
 
     // Scroll active item into view
     setTimeout(function() {
-      var active = ul.querySelector('li.active');
+      var active = ul.querySelector('.q-item.active');
       if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }, 50);
   }
