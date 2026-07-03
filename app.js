@@ -568,7 +568,8 @@
     if (!hasAnswer(q)) h += '<span class="q-tag no-answer">⚠ 无答案</span>';
     h += '</div>';
     h += '<div class="q-number">第 ' + (state.current+1) + ' / ' + state.indices.length + ' 题</div>';
-    h += '<div class="q-question">' + escapeHtml(q.question) + '</div>';
+    var qHtml = q.question && (q.question.indexOf('<p>') !== -1 || q.question.indexOf('<img') !== -1) ? q.question : escapeHtml(q.question);
+    h += '<div class="q-question">' + qHtml + '</div>';
 
     if (q.type === 'single' || q.type === 'multiple' || q.type === 'judge') {
       var opts = q.type === 'judge' ? ['正确','错误'] : q.options;
@@ -583,7 +584,8 @@
           if (correct.indexOf(i) !== -1) cls += ' correct';
           else if (sel.indexOf(i) !== -1) cls += ' wrong-answer';
         }
-        h += '<li class="'+cls.trim()+'" data-opt="'+i+'"><span class="opt-label">'+String.fromCharCode(65+i)+'</span><span>'+escapeHtml(opts[i])+'</span></li>';
+        var optHtml = opts[i] && (opts[i].indexOf('<p>') !== -1 || opts[i].indexOf('<img') !== -1) ? opts[i] : escapeHtml(opts[i]);
+        h += '<li class="'+cls.trim()+'" data-opt="'+i+'"><span class="opt-label">'+String.fromCharCode(65+i)+'</span><span>'+optHtml+'</span></li>';
       }
       h += '</ul>';
     } else if (q.type === 'fill') {
