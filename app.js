@@ -604,7 +604,7 @@
     h += '<button class="btn" id="editAnswerBtn">✏️ 编辑答案</button>';
     h += '<button class="btn" id="editCatBtn">🏷️ 编辑分类</button>';
     h += '<button class="btn" id="editSubjBtn">📚 编辑科目</button>';
-    h += '<button class="btn btn-danger" id="deleteBtn">🗑️ 删除题目</button>';
+    h += '<button class="btn btn-danger" id="deleteBtn">🗑️ 批量删除</button>';
     h += '</div>';
 
     if (state.revealed && hasAnswer(q)) {
@@ -682,18 +682,7 @@
     var editSubjBtn = document.getElementById('editSubjBtn');
     if (editSubjBtn) editSubjBtn.onclick = function() { openSubjectEditor(q); };
     var deleteBtn = document.getElementById('deleteBtn');
-    if (deleteBtn) deleteBtn.onclick = function() {
-      if (confirm('确定删除这道题吗？')) {
-        var qi = state.indices[state.current];
-        state.questions.splice(qi, 1);
-        state.revealed = false; state.selected = null; state.fillValue = '';
-        if (state.current >= state.indices.length - 1 && state.current > 0) state.current--;
-        saveQuestionsToStorage();
-    buildCategoryFilter(); buildIndex(); render();
-    syncFromCloud();
-        uploadToCloud();
-      }
-    };
+    if (deleteBtn) deleteBtn.onclick = function() { openDeleteEditor(); };
   }
 
   function openCategoryEditor(q) {
@@ -850,6 +839,66 @@
       alert('已修改 ' + count + ' 道题的科目为「' + newSubj + '」');
     };
     document.getElementById('cancelSubjBtn').onclick = function() {
+      div.remove();
+    };
+  }
+
+  function openDeleteEditor() {
+    var existing = document.getElementById('deleteEditor');
+    if (existing) existing.remove();
+
+    var div = document.createElement('div');
+    div.id = 'deleteEditor';
+    div.className = 'cat-editor';
+
+    var html = '<h4>🗑️ 批量删除题目</h4>';
+    html += '<div class="cat-editor-row" style="margin-bottom:8px">';
+    html += '<label style="cursor:pointer"><input type="checkbox" id="delSelectAll"> 全选</label>';
+    html += '</div>';
+    html += '<div class="subj-batch-list">';
+    for (var i = 0; i < state.questions.length; i++) {
+      var q2 = state.questions[i];
+      var subj2 = q2.subject || '未分科目';
+      var cat2 = q2.category || '未分类';
+      html += '<label class="subj-batch-item" style="display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:13px;cursor:pointer;border-radius:4px">';
+      html += '<input type="checkbox" class="del-check" data-qid="' + escapeAttr(q2.id) + '">';
+      html += '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (i+1) + '. ' + escapeHtml((q2.question||'').substring(0,40)) + '</span>';
+      html += '<span style="font-size:11px;color:var(--text2);flex-shrink:0">[' + escapeHtml(subj2 + '/' + cat2) + ']</span>';
+      html += '</label>';
+    }
+    html += '</div>';
+    html += '<div class="editor-actions">';
+    html += '<button class="btn btn-danger" id="confirmDelBtn">🗑️ 删除选中</button>';
+    html += '<button class="btn" id="cancelDelBtn">取消</button>';
+    html += '</div>';
+
+    div.innerHTML = html;
+    document.querySelector('.content').insertBefore(div, document.querySelector('.quiz-area').nextSibling);
+
+    var checks = div.querySelectorAll('.del-check');
+    document.getElementById('delSelectAll').onchange = function() {
+      var checked = this.checked;
+      for (var i = 0; i < checks.length; i++) checks[i].checked = checked;
+    };
+
+    document.getElementById('confirmDelBtn').onclick = function() {
+      var selectedIds = {};
+      var count = 0;
+      for (var i = 0; i < checks.length; i++) {
+        if (checks[i].checked) { selectedIds[checks[i].getAttribute('data-qid')] = true; count++; }
+      }
+      if (!count) { alert('请选择要删除的题目'); return; }
+      if (!confirm('确定删除 ' + count + ' 道题吗？此操作不可撤销！')) return;
+      state.questions = state.questions.filter(function(q) { return !selectedIds[q.id]; });
+      state.current = 0; state.revealed = false; state.selected = null; state.fillValue = '';
+      saveQuestionsToStorage();
+      buildCategoryFilter();
+      buildIndex();
+      render();
+      uploadToCloud();
+      showToast('🗑️ 已删除 ' + count + ' 道题', 'success');
+    };
+    document.getElementById('cancelDelBtn').onclick = function() {
       div.remove();
     };
   }
